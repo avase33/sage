@@ -133,4 +133,4 @@ CI runs the suite on Python 3.10–3.12 and smoke-tests the CLI and server impor
 
 ## 📄 License
 
-MIT © Akhil — see [LICENSE](LICENSE).
+ Akhil — see [LICENSE](LICENSE).
