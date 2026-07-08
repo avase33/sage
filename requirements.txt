@@ -1,0 +1,5 @@
+# The agent + ML core (embeddings, RAG, memory, providers, db, CLI) is pure
+# standard library and needs nothing here. These are only for the web server:
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2

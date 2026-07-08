@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sage · your personal AI agent</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#11151f; --panel2:#161b28; --line:#232c40; --ink:#e7edf5;
+    --muted:#8a97ab; --accent:#6b8afd; --accent2:#67e8c3; --user:#1c2740; --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .app{display:grid;grid-template-columns:280px 1fr;height:100vh}
+  /* sidebar */
+  aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;padding:16px 16px 12px}
+  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;color:#0b0e14;font-weight:800}
+  .brand h1{font-size:17px;margin:0;letter-spacing:-.2px}
+  .brand small{color:var(--muted);font-size:11px;display:block}
+  .newbtn{margin:6px 12px 10px;padding:9px;border:1px solid var(--line);background:var(--panel2);
+    color:var(--ink);border-radius:9px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:center}
+  .newbtn:hover{border-color:var(--accent)}
+  .section{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding:10px 16px 4px}
+  .list{flex:1;overflow:auto;padding:0 8px}
+  .conv{padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--ink);font-size:14px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .conv:hover{background:var(--panel2)}
+  .conv.active{background:var(--user)}
+  .docbtn{margin:8px 12px;padding:8px;border:1px dashed var(--line);background:transparent;color:var(--muted);
+    border-radius:9px;cursor:pointer;font-size:13px}
+  .docbtn:hover{color:var(--ink);border-color:var(--accent)}
+  .foot{padding:10px 16px;color:var(--muted);font-size:11px;border-top:1px solid var(--line)}
+  /* main */
+  main{display:flex;flex-direction:column;min-width:0}
+  .thread{flex:1;overflow:auto;padding:26px 0}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  .msg{display:flex;gap:14px;margin-bottom:22px}
+  .av{width:30px;height:30px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700}
+  .av.u{background:var(--user);color:var(--accent)}
+  .av.a{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0e14}
+  .bubble{min-width:0}
+  .who{font-size:12px;color:var(--muted);margin-bottom:3px}
+  .body{white-space:pre-wrap;word-wrap:break-word}
+  .body code{background:#0e1420;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px;
+    font-family:ui-monospace,Menlo,monospace}
+  .body pre{background:#0e1420;border:1px solid var(--line);border-radius:9px;padding:12px 14px;overflow:auto}
+  .body pre code{border:0;padding:0;background:none}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--accent2);
+    background:#0f1b1a;border:1px solid #1c3a34;border-radius:999px;padding:3px 10px;margin:4px 6px 4px 0}
+  .sources{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+  .src{font-size:12.5px;color:var(--muted);margin:4px 0}
+  .src b{color:var(--ink)}
+  .composer{border-top:1px solid var(--line);background:var(--panel);padding:14px 0}
+  .crow{max-width:760px;margin:0 auto;padding:0 20px;display:flex;gap:10px;align-items:flex-end}
+  textarea{flex:1;resize:none;background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;font:inherit;max-height:180px}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .send{width:44px;height:44px;border-radius:11px;border:0;background:var(--accent);color:#08101f;
+    font-size:18px;cursor:pointer;flex:none}
+  .send:disabled{opacity:.5;cursor:default}
+  .empty{color:var(--muted);text-align:center;margin-top:14vh}
+  .empty h2{color:var(--ink);font-weight:600}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9}
+  .modal.on{display:flex}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;width:min(560px,92vw)}
+  .card h3{margin:0 0 12px}
+  .card input,.card textarea{width:100%;margin-bottom:10px;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;padding:10px}
+  .card .row{display:flex;gap:10px;justify-content:flex-end}
+  .card button{padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);
+    color:var(--ink);cursor:pointer}
+  .card button.primary{background:var(--accent);color:#08101f;border:0}
+  .cursor{display:inline-block;width:8px;height:16px;background:var(--accent);vertical-align:-3px;
+    animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="logo">S</div>
+      <div><h1>Sage</h1><small id="status">personal AI agent</small></div>
+    </div>
+    <button class="newbtn" onclick="newChat()">＋ New chat</button>
+    <div class="section">Conversations</div>
+    <div class="list" id="convs"></div>
+    <button class="docbtn" onclick="openDoc()">📄 Add a document for RAG</button>
+    <div class="foot">Runs offline on a mock model · add an API key to go live.</div>
+  </aside>
+
+  <main>
+    <div class="thread" id="thread">
+      <div class="wrap"><div class="empty" id="empty">
+        <div class="logo" style="width:46px;height:46px;margin:0 auto 14px;font-size:22px">S</div>
+        <h2>How can I help, Akhil?</h2>
+        <p style="color:var(--muted)">Ask anything. Upload a document and I'll answer from it.</p>
+      </div></div>
+    </div>
+    <div class="composer">
+      <div class="crow">
+        <textarea id="input" rows="1" placeholder="Message Sage…"
+          oninput="aut=grow(this)" onkeydown="onKey(event)"></textarea>
+        <button class="send" id="send" onclick="send()">➤</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="docModal">
+  <div class="card">
+    <h3>Add a document</h3>
+    <input id="docTitle" placeholder="Title (e.g. Product spec)" />
+    <textarea id="docText" rows="8" placeholder="Paste text here — it will be chunked, embedded, and made searchable."></textarea>
+    <div class="row">
+      <button onclick="closeDoc()">Cancel</button>
+      <button class="primary" onclick="saveDoc()">Index document</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let convId = null;
+let streaming = false;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function md(text){
+  let t = esc(text);
+  t = t.replace(/```([\s\S]*?)```/g, (_,c)=>`<pre><code>${c.replace(/^\n/,'')}</code></pre>`);
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return t;
+}
+function grow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,180)+'px';}
+function onKey(e){ if(e.key==='Enter' && !e.shiftKey){e.preventDefault(); send();} }
+
+async function loadConvs(){
+  const r = await fetch('/api/conversations'); const list = await r.json();
+  const box = $('convs'); box.innerHTML='';
+  list.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='conv'+(c.id===convId?' active':''); d.textContent=c.title||'New chat';
+    d.onclick=()=>openConv(c.id); box.appendChild(d);
+  });
+}
+async function health(){ try{const h=await (await fetch('/api/health')).json();
+  $('status').textContent = `${h.provider} · ${h.documents} docs`;}catch(e){} }
+
+function clearThread(){ $('thread').innerHTML='<div class="wrap" id="wrap"></div>';
+  if(!$('wrap')){const w=document.createElement('div');w.className='wrap';w.id='wrap';$('thread').appendChild(w);} }
+
+function addMsg(role, html){
+  let wrap=$('wrap'); if(!wrap){clearThread(); wrap=$('wrap');}
+  const m=document.createElement('div'); m.className='msg';
+  m.innerHTML=`<div class="av ${role==='user'?'u':'a'}">${role==='user'?'You':'S'}</div>
+    <div class="bubble"><div class="who">${role==='user'?'You':'Sage'}</div><div class="body">${html}</div></div>`;
+  wrap.appendChild(m); $('thread').scrollTop=$('thread').scrollHeight;
+  return m.querySelector('.body');
+}
+
+async function openConv(id){
+  convId=id; loadConvs(); clearThread();
+  const msgs = await (await fetch(`/api/conversations/${id}/messages`)).json();
+  msgs.forEach(m=> addMsg(m.role, md(m.content)));
+}
+function newChat(){ convId=null; clearThread();
+  $('thread').firstChild.innerHTML=''; addMsgEmpty(); loadConvs(); }
+function addMsgEmpty(){ /* keep it simple: blank canvas */ }
+
+async function send(){
+  const input=$('input'); const text=input.value.trim();
+  if(!text || streaming) return;
+  input.value=''; grow(input);
+  if($('empty')) clearThread();
+  addMsg('user', md(text));
+  const body=addMsg('assistant',''); body.innerHTML='<span class="cursor"></span>';
+  streaming=true; $('send').disabled=true;
+
+  let acc=''; let chips=[]; let sources=null;
+  const resp=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({message:text, conversation_id:convId})});
+  const reader=resp.body.getReader(); const dec=new TextDecoder(); let buf='';
+  const render=()=>{ body.innerHTML = md(acc) + (streaming?'<span class="cursor"></span>':'')
+     + chips.map(c=>`<span class="chip">${c}</span>`).join('')
+     + (sources?renderSources(sources):''); $('thread').scrollTop=$('thread').scrollHeight; };
+  while(true){
+    const {done,value}=await reader.read(); if(done)break;
+    buf+=dec.decode(value,{stream:true}); let i;
+    while((i=buf.indexOf('\n\n'))>=0){
+      const line=buf.slice(0,i); buf=buf.slice(i+2);
+      if(!line.startsWith('data: '))continue;
+      const ev=JSON.parse(line.slice(6));
+      if(ev.type==='conversation'){ if(!convId){convId=ev.id; loadConvs();} }
+      else if(ev.type==='text'){ acc+=ev.text; render(); }
+      else if(ev.type==='tool_call'){ chips.push(`⚙ ${ev.name}(${JSON.stringify(ev.arguments)})`); render(); }
+      else if(ev.type==='tool_result'){ chips[chips.length-1]+=` = ${esc(ev.content)}`; render(); }
+      else if(ev.type==='sources'){ sources=ev.sources; }
+      else if(ev.type==='done'){ streaming=false; render(); }
+    }
+  }
+  streaming=false; $('send').disabled=false; render(); health();
+}
+function renderSources(src){
+  if(!src||!src.length) return '';
+  return '<div class="sources"><div class="who">Sources</div>'+
+    src.map((s,i)=>`<div class="src">[${i+1}] <b>${esc(s.title)}</b> — ${esc(s.text)}…</div>`).join('')+'</div>';
+}
+
+function openDoc(){ $('docModal').classList.add('on'); }
+function closeDoc(){ $('docModal').classList.remove('on'); }
+async function saveDoc(){
+  const title=$('docTitle').value.trim(); const textv=$('docText').value.trim();
+  if(!textv){ alert('Paste some text first.'); return; }
+  await fetch('/api/documents',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({title,text:textv})});
+  $('docTitle').value=''; $('docText').value=''; closeDoc(); health();
+}
+
+loadConvs(); health();
+</script>
+</body>
+</html>

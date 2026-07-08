@@ -1,0 +1,25 @@
+[sage:mock] 
+  -> calling calculator({'expression': '9 * 9'})... = 81
+The result is 81.
+No documents indexed yet. Add one with: sage add-doc <file>
+
+You:  What does Sage use for grounding answers?
+Sage: Based on your documents: [1] (from "Sage overview") Sage is a self-hostable personal AI agent. It streams answers token by token, can call tools such as a calculator, remembers the conversation, and grounds its replies in your own documents using retrieval-augmented generation (RAG). Embeddings are computed with a dependency-free hashing vectorizer by default, and answers cite the passages they came from. (This grounded answer cites the retrieved passages above.)
+      source [1] Sage overview (score 0.117)
+
+You:  What is 15 * 12?
+Sage: The result is 180.
+      source [1] Sage overview (score 0.058)
+Python 3.14.3
+RESULT: 10/10 checks passed
+
+[PASS] embeddings
+[PASS] rag
+[PASS] memory
+[PASS] tools
+[PASS] providers
+[PASS] agent_tool_loop
+[PASS] agent_rag_grounding
+[PASS] persistence
+[PASS] cli
+[PASS] example

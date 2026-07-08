@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sage-agent"
+version = "0.1.0"
+description = "A self-hostable personal AI agent: streaming chat with tool use, long-term memory, and document RAG. Offline-first, pluggable LLM providers."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Akhil" }]
+keywords = ["ai", "agent", "chatbot", "llm", "rag", "embeddings", "fastapi", "assistant"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Framework :: FastAPI",
+  "Environment :: Web Environment",
+]
+dependencies = []  # the ML/agent core is pure standard library
+
+[project.optional-dependencies]
+server = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "pydantic>=2"]
+dev = ["pytest>=7", "fastapi>=0.110", "uvicorn>=0.29", "pydantic>=2", "httpx>=0.27"]
+
+[project.scripts]
+sage = "sage.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/akhil/sage"
+Issues = "https://github.com/akhil/sage/issues"
+
+[tool.setuptools.packages.find]
+include = ["sage*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
