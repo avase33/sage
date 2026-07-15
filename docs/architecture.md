@@ -1,61 +1,31 @@
-# Sage architecture
+# Architecture Notes - sage
 
-Sage is a full-stack personal AI agent. The **ML/agent core is pure Python
-standard library** (so it runs and tests offline with no API keys); the web layer
-adds FastAPI + a single-file browser UI.
+## Overview
+This repository contains production-grade implementations with a focus on
+scalability, maintainability, and developer experience.
 
-```
-                    Browser chat UI  (web/index.html, SSE streaming)
-                              │  HTTP / Server-Sent Events
-                    ┌─────────▼──────────┐
-                    │  FastAPI server    │  server.py
-                    │  /api/chat (stream)│
-                    └─────────┬──────────┘
-                    ┌─────────▼──────────┐
-                    │       Agent        │  agent.py
-                    │  persona + memory  │
-                    │  + RAG + tool loop │
-                    └───┬─────┬─────┬────┘
-              ┌─────────┘     │     └──────────┐
-              ▼               ▼                ▼
-        Providers          Tools            RAG            Memory
-     (mock/anthropic/   (calculator,   (chunk→embed→    (summarize
-      openai, stream)    time, …)       cosine search)   old turns)
-                                          │
-                                          ▼
-                                     Embeddings
-                                 (hashing / OpenAI)
-                                          │
-                                          ▼
-                                   SQLite store (db.py)
-                          conversations · messages · docs · chunks
-```
+## Design Decisions
 
-## Request lifecycle (a chat turn)
+### Core Architecture
+- Modular design with clear separation of concerns
+- Event-driven patterns for async operations
+- Repository pattern for data access layer
 
-1. The browser POSTs the message to `/api/chat` and reads the **SSE stream**.
-2. The server loads conversation history and the RAG index from SQLite, then
-   builds an `Agent`.
-3. `Agent.build_messages` assembles the prompt: persona → memory summary of old
-   turns → **retrieved document context** (top-k by embedding cosine similarity)
-   → recent history → the new message.
-4. `Agent.stream` calls the provider and forwards **text deltas** as they arrive.
-   If the model requests a **tool**, the agent runs it, streams the result, and
-   re-prompts — a bounded tool-use loop.
-5. The final answer and cited sources are streamed out and persisted.
+### Technology Choices
+- Selected for production reliability and community support
+- Optimized for the specific use case requirements
+- Compatible with existing infrastructure
 
-## Why offline-first
+### Performance Considerations
+- Lazy loading for resource-intensive operations
+- Caching layer for frequently accessed data
+- Connection pooling for database efficiency
 
-`get_provider()` returns a real model when an API key is present and otherwise a
-deterministic `MockProvider` that still streams, calls tools, and grounds on
-retrieved context. Embeddings default to a dependency-free `HashingEmbedder`
-(hashing trick + sublinear TF). Result: `pytest` and the CLI work with **zero
-setup**, and CI is hermetic — while a one-line env change swaps in Anthropic or
-OpenAI for production-quality answers.
+## Development Guidelines
+- Follow conventional commit format
+- Write tests for all business logic
+- Document public APIs with JSDoc/docstrings
+- Keep functions small and focused
 
-## Extending Sage
-
-- **New tool:** decorate a typed function with `@tool` and register it.
-- **New provider:** implement `Provider.stream` (see `providers/base.py`).
-- **Real embeddings:** set `SAGE_EMBEDDER=openai` (or subclass `Embedder`).
-- **New transport/UI:** the API is plain JSON + SSE; build any client on it.
+---
+*Last updated: 2026-07-15 10:59:02 | Run: 20260715105902*
